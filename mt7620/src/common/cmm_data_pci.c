@@ -1163,75 +1163,6 @@ VOID	RTMPHandlePreTBTTInterrupt(
 #endif /* P2P_SUPPORT */
 	{
 		APUpdateAllBeaconFrame(pAd);
- 
-	    POS_COOKIE pObj = (POS_COOKIE) pAd->OS_Cookie;
-#ifdef WORKQUEUE_BH
-        RTMP_OS_TASKLET_SCHE(&pObj->pretbtt_work);
-#else
-        RTMP_OS_TASKLET_SCHE(&pObj->pretbtt_task);
-#endif
-
-if 0
-
-		RTMP_IO_WRITE32(pAd, MCU_INT_STATUS, 0x14);
-		pAd->MacTab.fMcastPsQEnable = FALSE;
-
-		if ((pAd->ApCfg.DtimCount == 0) &&
-			(pAd->MacTab.McastPsQueue.Head))
-		{
-			UINT32 macValue;
-			PQUEUE_ENTRY pEntry;
-			BOOLEAN bPS = FALSE;
-			UINT count = 0;
-			unsigned long IrqFlags;
-
-			RTMP_IO_READ32(pAd, PBF_CFG, &macValue);
-			macValue &= (~0x0C);
-			RTMP_IO_WRITE32(pAd, PBF_CFG, macValue);
-	
-			RTMP_IRQ_LOCK(&pAd->irq_lock, IrqFlags);
-
-			while (pAd->MacTab.McastPsQueue.Head)
-			{
-				bPS = TRUE;
-				if (pAd->TxSwQueue[QID_HCCA].Number <= (MAX_PACKETS_IN_QUEUE + MAX_PACKETS_IN_MCAST_PS_QUEUE))
-				{
-					pEntry = RemoveHeadQueue(&pAd->MacTab.McastPsQueue);
-
-					if (count)
-					{
-						RTMP_SET_PACKET_MOREDATA(pEntry, TRUE);
-					}
-					InsertHeadQueue(&pAd->TxSwQueue[QID_HCCA], pEntry);
-					count++;
-				}
-				else
-				{
-					break;
-				}
-			}
-	
-			RTMP_IRQ_UNLOCK(&pAd->irq_lock, IrqFlags);
-							
-			if (pAd->MacTab.McastPsQueue.Number == 0)
-			{			
-				UINT bss_index;
-
-				/* clear MCAST/BCAST backlog bit for all BSS */
-				for(bss_index=BSS0; bss_index<pAd->ApCfg.BssidNum; bss_index++)
-					WLAN_MR_TIM_BCMC_CLEAR(bss_index);
-				/* End of for */
-			}
-			pAd->MacTab.PsQIdleCount = 0;
-
-			// Dequeue outgoing framea from TxSwQueue0..3 queue and process it
-			if (bPS == TRUE) 
-			{
-				RTMPDeQueuePacket(pAd, FALSE, QID_HCCA, /*MAX_TX_IN_TBTT*/MAX_PACKETS_IN_MCAST_PS_QUEUE);
-				pAd->MacTab.fMcastPsQEnable = TRUE;
-			}
-		}
-#endif
 	}
 	else
 #endif /* CONFIG_AP_SUPPORT */
@@ -1242,9 +1173,6 @@ if 0
 		}
 	}
 
-#ifdef MESH_SUPPORT
-	MeshUpdateBeaconFrame(pAd, MESH_BEACON_IDX(pAd));
-#endif /* MESH_SUPPORT */
 
 }
 
