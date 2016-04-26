@@ -4384,12 +4384,13 @@ INT RTMPAPQueryInformation(
 		     DBGPRINT(RT_DEBUG_TRACE, ("Query::OID_802_11_TX_PACKET_BURST (=%d)\n",pAd->CommonCfg.bEnableTxBurst));
 		     break;
 
+#ifdef DOT11N_DRAFT3
 		case OID_802_11_COEXISTENCE:
 	            wrq->u.data.length = sizeof(BOOLEAN);
 	            Status = copy_to_user(wrq->u.data.pointer, &pAd->CommonCfg.bBssCoexEnable, wrq->u.data.length);
 		     DBGPRINT(RT_DEBUG_TRACE, ("Query::OID_802_11_COEXISTENCE (=%d)\n",pAd->CommonCfg.bBssCoexEnable));
 		     break;
-
+#endif
 
 		case OID_802_11_AMSDU:
 	            wrq->u.data.length = sizeof(ulInfo);
